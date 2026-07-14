@@ -1,0 +1,108 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  --color-mint-50: #f0fdf8;
+  --color-mint-100: #ccfbf1;
+  --color-mint-200: #99f6e4;
+  --color-mint-400: #2dd4bf;
+  --color-mint-500: #14b8a6;
+  --color-peach-100: #ffedd5;
+  --color-peach-300: #fdba74;
+  --color-peach-400: #fb923c;
+  --color-lavender-100: #ede9fe;
+  --color-lavender-300: #c4b5fd;
+  --color-lavender-400: #a78bfa;
+  --color-sky-100: #e0f2fe;
+  --color-sky-300: #7dd3fc;
+  --color-sky-400: #38bdf8;
+  --color-sunny-100: #fef9c3;
+  --color-sunny-300: #fde047;
+  --color-sunny-400: #facc15;
+  --color-garden-grass: #7ec850;
+  --color-garden-grass-dark: #5a9e3a;
+  --color-garden-sky-day: #87ceeb;
+  --color-garden-sky-evening: #f4a261;
+  --color-garden-sky-night: #2d3561;
+  --color-cozy-cream: #fff8f0;
+  --color-cozy-brown: #8b6914;
+  --color-cozy-pink: #ffb3c1;
+}
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: local('Nunito'), local('Segoe UI');
+}
+
+html {
+  font-family: var(--font-sans);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #e8f4fc 0%, #f0fdf4 100%);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+.game-container {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+  background: var(--color-cozy-cream);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.08);
+}
+
+@media (min-width: 768px) {
+  .game-container {
+    min-height: calc(100dvh - 2rem);
+    margin: 1rem auto;
+    border-radius: 1.5rem;
+    overflow: hidden;
+  }
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid #14b8a6;
+  outline-offset: 2px;
+}
+
+.text-size-sm {
+  font-size: 0.875rem;
+}
+
+.text-size-md {
+  font-size: 1rem;
+}
+
+.text-size-lg {
+  font-size: 1.125rem;
+}
+
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
