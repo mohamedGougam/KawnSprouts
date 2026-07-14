@@ -10,8 +10,13 @@ const NAV_ITEMS = [
   { to: '/profile', label: 'Profile', icon: User },
 ];
 
+import { useVisualViewportInsets } from '../../hooks/useVisualViewportInsets';
+
 export function BottomNav() {
   const location = useLocation();
+  const { keyboardOpen } = useVisualViewportInsets();
+
+  if (keyboardOpen) return null;
 
   return (
     <nav

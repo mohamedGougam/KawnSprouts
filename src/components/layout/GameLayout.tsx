@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { BottomNav } from './BottomNav';
+import { useVisualViewportInsets } from '../../hooks/useVisualViewportInsets';
 
 interface GameLayoutProps {
   children: ReactNode;
@@ -7,9 +8,11 @@ interface GameLayoutProps {
 }
 
 export function GameLayout({ children, hideNav = false }: GameLayoutProps) {
+  const { keyboardOpen } = useVisualViewportInsets();
+
   return (
     <div className="game-container flex flex-col">
-      <main className={`flex-1 ${hideNav ? '' : 'pb-20'}`}>{children}</main>
+      <main className={`flex-1 ${hideNav || keyboardOpen ? '' : 'pb-20'}`}>{children}</main>
       {!hideNav && <BottomNav />}
     </div>
   );

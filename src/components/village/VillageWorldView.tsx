@@ -114,6 +114,7 @@ export function VillageWorldView() {
   const furniturePlacements = useGameStore((s) => s.furniturePlacements);
   const mountShopVehicle = useGameStore((s) => s.mountShopVehicle);
   const dismountShopVehicle = useGameStore((s) => s.dismountShopVehicle);
+  const setVillageThreadOpen = useGameStore((s) => s.setVillageThreadOpen);
 
   const houseExperience = useHouseExperience();
   const shopExperience = useShopExperience();
@@ -163,6 +164,11 @@ export function VillageWorldView() {
   const [replyToMessageId, setReplyToMessageId] = useState<string | null>(null);
   const [pendingChatFriendId, setPendingChatFriendId] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState('');
+
+  useEffect(() => {
+    setVillageThreadOpen(!!activeThreadId);
+    return () => setVillageThreadOpen(false);
+  }, [activeThreadId, setVillageThreadOpen]);
 
   const [wildlife, setWildlife] = useState<WildlifeState[]>(() =>
     createWildlifeStates(theme === 'night'),

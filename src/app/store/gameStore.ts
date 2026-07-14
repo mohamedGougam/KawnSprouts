@@ -71,6 +71,7 @@ interface GameStore extends PersistedGameState {
   speechBubble: string | null;
   lastTapTime: number;
   villageMoveMode: boolean;
+  villageThreadOpen: boolean;
 
   hydrate: () => void;
   persist: () => void;
@@ -131,6 +132,7 @@ interface GameStore extends PersistedGameState {
   tickStatusDecay: () => void;
 
   setVillageMoveMode: (enabled: boolean) => void;
+  setVillageThreadOpen: (open: boolean) => void;
   moveVillageSprout: (position: WorldPosition) => { success: boolean };
   discoverWorldObject: (objectId: string) => void;
   discoverSecret: (secretId: string) => void;
@@ -200,6 +202,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   speechBubble: null,
   lastTapTime: 0,
   villageMoveMode: false,
+  villageThreadOpen: false,
 
   hydrate: () => {
     const state = loadStateWithFallback(repo);
@@ -222,6 +225,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       speechBubble: null,
       lastTapTime: 0,
       villageMoveMode: false,
+  villageThreadOpen: false,
     });
     get().checkWelcomeBack();
   },
@@ -284,6 +288,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       welcomeBackMessage: '',
       speechBubble: null,
       villageMoveMode: false,
+  villageThreadOpen: false,
     });
   },
 
@@ -929,6 +934,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   setVillageMoveMode: (enabled) => set({ villageMoveMode: enabled }),
+
+  setVillageThreadOpen: (open) => set({ villageThreadOpen: open }),
 
   moveVillageSprout: (position) => {
     if (!isWalkablePosition(position)) return { success: false };

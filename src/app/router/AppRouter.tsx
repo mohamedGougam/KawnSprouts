@@ -28,6 +28,7 @@ function AppRoutes() {
   const hydrate = useGameStore((s) => s.hydrate);
   const decorationMode = useGameStore((s) => s.decorationMode);
   const villageMoveMode = useGameStore((s) => s.villageMoveMode);
+  const villageThreadOpen = useGameStore((s) => s.villageThreadOpen);
   const settings = useGameStore((s) => s.settings);
 
   useEffect(() => {
@@ -49,7 +50,7 @@ function AppRoutes() {
   const showDev = new URLSearchParams(window.location.search).has('dev');
 
   return (
-    <GameLayout hideNav={decorationMode || villageMoveMode}>
+    <GameLayout hideNav={decorationMode || villageMoveMode || villageThreadOpen}>
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/" element={<VillageWorldView />} />

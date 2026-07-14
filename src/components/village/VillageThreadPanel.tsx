@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import type { VillageMessage } from '../../models';
+import { useVisualViewportInsets } from '../../hooks/useVisualViewportInsets';
 
 interface VillageThreadPanelProps {
   open: boolean;
@@ -24,10 +25,17 @@ export function VillageThreadPanel({
   onClose,
   inputPlaceholder = 'Reply…',
 }: VillageThreadPanelProps) {
+  const { keyboardOpen, bottomInset } = useVisualViewportInsets();
+
   if (!open) return null;
 
+  const panelBottom = keyboardOpen ? bottomInset + 8 : 16;
+
   return (
-    <div className="pointer-events-auto absolute bottom-20 right-2 top-16 z-50 flex w-[min(17rem,42vw)] flex-col rounded-2xl bg-white/95 shadow-xl ring-1 ring-gray-200 backdrop-blur-sm">
+    <div
+      className="pointer-events-auto fixed right-2 z-[60] flex w-[min(18rem,calc(100vw-1rem))] flex-col rounded-2xl bg-white/95 shadow-xl ring-1 ring-gray-200 backdrop-blur-sm"
+      style={{ top: '3.5rem', bottom: `${panelBottom}px` }}
+    >
       <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2">
         <div>
           <p className="text-sm font-semibold text-gray-800">{title}</p>
@@ -69,6 +77,9 @@ export function VillageThreadPanel({
           placeholder={inputPlaceholder}
           maxLength={120}
           className="focus-ring min-h-[40px] flex-1 rounded-xl border border-gray-200 px-3 text-sm"
+          onFocus={(e) => {
+            window.setTimeout(() => e.target.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 300);
+          }}
         />
         <button type="submit" className="focus-ring rounded-xl bg-mint-400 px-3 text-sm font-semibold text-white">
           Send
