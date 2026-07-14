@@ -174,11 +174,7 @@ export function HouseInteriorScene({
                 items={HOUSE_SHOP_ITEMS}
                 balance={currency}
                 progress={houseProgress}
-                onBuy={(id) => {
-                  const result = onBuyItem(id);
-                  if (result.success) setShowShop(false);
-                  return result;
-                }}
+                onBuy={(id) => onBuyItem(id)}
               />
             </motion.div>
           </motion.div>

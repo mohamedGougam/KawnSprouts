@@ -13,10 +13,6 @@ export function buildHouseInteriorProps(
   baseProps: InteriorProp[],
   ownedItemIds: string[],
 ): InteriorProp[] {
-  if (!ownedItemIds.length) {
-    return baseProps.filter((p) => !GATED_PROP_ITEMS[p.id]);
-  }
-
   const owned = new Set(ownedItemIds);
   const props = baseProps.filter((p) => {
     const required = GATED_PROP_ITEMS[p.id];
@@ -30,9 +26,10 @@ export function buildHouseInteriorProps(
     extra.push({
       id: `owned-chair-${i}`,
       type: 'chair',
-      x: 0.55 + i * 0.32,
+      x: -0.45 - i * 0.12,
       y: 0,
-      z: 0.48 + i * 0.08,
+      z: 0.22 + i * 0.08,
+      rotation: Math.PI * 0.08,
     });
   }
 
@@ -41,7 +38,7 @@ export function buildHouseInteriorProps(
   }
 
   if (owned.has('plush-cloud')) {
-    extra.push({ id: 'owned-plush', type: 'teddy', x: -1.72, y: 0.44, z: -0.55, scale: 0.65 });
+    extra.push({ id: 'owned-plush', type: 'teddy', x: -1.72, y: 0.44, z: -0.55, scale: 0.85 });
   }
 
   if (owned.has('lace-curtains')) {
@@ -52,7 +49,14 @@ export function buildHouseInteriorProps(
   }
 
   if (owned.has('wooden-toy') && !owned.has('bookshelf')) {
-    extra.push({ id: 'owned-toy', type: 'teddy', x: -0.35, y: 0.12, z: 0.85, scale: 0.55 });
+    extra.push({
+      id: 'owned-toy',
+      type: 'teddy',
+      x: 0.48,
+      y: 0.38,
+      z: 0.05,
+      scale: 1.25,
+    });
   }
 
   return [...props, ...extra];

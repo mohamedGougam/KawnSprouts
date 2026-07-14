@@ -263,14 +263,16 @@ function PropShape({
           </mesh>
         </group>
       );
-    case 'chair':
+    case 'chair': {
+      const isPurchased = prop.id.startsWith('owned-');
+      const fabricColor = isPurchased ? '#fbbf24' : theme.fabricColor;
       return (
         <group onClick={(e) => onClick(e, 'wood-bounce')}>
           <RoundedBox args={[0.48, 0.42, 0.44]} radius={0.08} position={[0, 0.24, 0]} castShadow>
-            <meshStandardMaterial color={theme.fabricColor} roughness={0.88} />
+            <meshStandardMaterial color={fabricColor} roughness={0.88} />
           </RoundedBox>
           <RoundedBox args={[0.44, 0.1, 0.4]} radius={0.04} position={[0, 0.48, -0.08]} castShadow>
-            <meshStandardMaterial color={theme.fabricColor} roughness={0.88} />
+            <meshStandardMaterial color={fabricColor} roughness={0.88} />
           </RoundedBox>
           {[0, 1, 2, 3].map((i) => (
             <mesh
@@ -284,6 +286,7 @@ function PropShape({
           ))}
         </group>
       );
+    }
     case 'teacup':
       return (
         <mesh position={[0, 0, 0]} onClick={(e) => onClick(e, 'steam')} castShadow>
@@ -433,13 +436,24 @@ function PropShape({
           <meshStandardMaterial color="#fff" transparent opacity={0.82} roughness={0.95} />
         </mesh>
       );
-    case 'teddy':
+    case 'teddy': {
+      const isPurchased = prop.id.startsWith('owned-');
+      const radius = isPurchased ? 0.14 : 0.1;
       return (
-        <mesh onClick={(e) => onClick(e, 'cushion')} castShadow>
-          <sphereGeometry args={[0.1, 12, 12]} />
-          <meshStandardMaterial color="#a16207" roughness={0.9} />
-        </mesh>
+        <group onClick={(e) => onClick(e, 'cushion')}>
+          <mesh castShadow>
+            <sphereGeometry args={[radius, 12, 12]} />
+            <meshStandardMaterial color="#a16207" roughness={0.9} />
+          </mesh>
+          {isPurchased && (
+            <mesh position={[0, radius * 0.55, radius * 0.35]} castShadow>
+              <sphereGeometry args={[radius * 0.55, 10, 10]} />
+              <meshStandardMaterial color="#a16207" roughness={0.9} />
+            </mesh>
+          )}
+        </group>
       );
+    }
     case 'window':
       return (
         <mesh onClick={(e) => onClick(e, 'wind-window')}>
