@@ -4,9 +4,10 @@ import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { CAMERA_LOOK, CAMERA_POS } from './roomConstants';
 
-/** World-space view volume that must fit on screen (room + roof + padding). */
-export const SCENE_VIEW_WIDTH = 7.4;
-export const SCENE_VIEW_HEIGHT = 5.6;
+/** Frustum fit for the playable floor (keeps the roof from dominating mobile). */
+export const SCENE_VIEW_WIDTH = 4.85;
+export const SCENE_VIEW_HEIGHT = 3.35;
+export const SCENE_VIEW_ZOOM = 1.12;
 
 function fitOrthoToScene(camera: THREE.OrthographicCamera, width: number, height: number) {
   camera.position.set(CAMERA_POS.x, CAMERA_POS.y, CAMERA_POS.z);
@@ -15,9 +16,9 @@ function fitOrthoToScene(camera: THREE.OrthographicCamera, width: number, height
   camera.zoom = 1;
 
   const aspect = width / Math.max(height, 1);
-  const pad = 1.08;
-  const sceneW = SCENE_VIEW_WIDTH * pad;
-  const sceneH = SCENE_VIEW_HEIGHT * pad;
+  const pad = 1.02;
+  const sceneW = (SCENE_VIEW_WIDTH * pad) / SCENE_VIEW_ZOOM;
+  const sceneH = (SCENE_VIEW_HEIGHT * pad) / SCENE_VIEW_ZOOM;
 
   if (aspect >= sceneW / sceneH) {
     const h = sceneH;

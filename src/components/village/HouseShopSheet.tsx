@@ -7,7 +7,7 @@ interface HouseShopSheetProps {
   items: HouseShopItem[];
   balance: CurrencyBalance;
   progress: HouseProgress;
-  onBuy: (itemId: string) => void;
+  onBuy: (itemId: string) => { success: boolean; message?: string };
 }
 
 export function HouseShopSheet({ items, balance, progress, onBuy }: HouseShopSheetProps) {

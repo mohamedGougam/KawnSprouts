@@ -26,7 +26,7 @@ interface HouseInteriorSceneProps {
   shopUnlocked: boolean;
   currency: CurrencyBalance;
   houseProgress: HouseProgress;
-  onBuyItem: (id: string) => void;
+  onBuyItem: (id: string) => { success: boolean; message?: string };
   onRequestExit: () => void;
   furniturePlacements?: FurniturePlacement[];
   hatOverlay?: string | null;
@@ -114,7 +114,7 @@ export function HouseInteriorScene({
       )}
 
       <div
-        className="relative mx-auto min-h-0 w-full max-w-lg flex-1 touch-none overscroll-none px-1 pb-3 sm:max-w-xl sm:px-2"
+        className="relative min-h-0 w-full flex-1 touch-none overscroll-none"
         style={{ touchAction: 'none' }}
       >
         <Suspense
@@ -134,15 +134,15 @@ export function HouseInteriorScene({
             interactive
             onDoorExit={onRequestExit}
             furniturePlacements={furniturePlacements}
+            ownedItemIds={isPlayerHouse ? houseProgress.ownedItemIds : []}
             hatOverlay={hatOverlay}
             hatOffset={hatOffset}
           />
         </Suspense>
+        <p className="pointer-events-none absolute bottom-2 left-0 right-0 z-10 text-center text-[10px] text-amber-200/45">
+          Tap the floor to walk · Tap objects to interact · Tap the door to leave
+        </p>
       </div>
-
-      <p className="shrink-0 pb-2 text-center text-[10px] text-amber-200/50">
-        Tap the floor to walk · Tap objects to interact · Tap the door to leave
-      </p>
 
       <AnimatePresence>
         {showShop && isPlayerHouse && (
@@ -174,7 +174,11 @@ export function HouseInteriorScene({
                 items={HOUSE_SHOP_ITEMS}
                 balance={currency}
                 progress={houseProgress}
-                onBuy={onBuyItem}
+                onBuy={(id) => {
+                  const result = onBuyItem(id);
+                  if (result.success) setShowShop(false);
+                  return result;
+                }}
               />
             </motion.div>
           </motion.div>

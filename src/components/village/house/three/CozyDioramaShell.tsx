@@ -93,12 +93,11 @@ export function CozyDioramaShell({ theme, themeTime }: CozyDioramaShellProps) {
         {trimMat}
       </mesh>
 
-      {/* Soft domed roof shell */}
-      <mesh position={[0, DIORAMA_WALL_H + 0.55, -0.25]}>
-        <sphereGeometry args={[DIORAMA_DOME_R, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2.2]} />
+      {/* Soft domed roof shell — kept smaller so the room fills the viewport */}
+      <mesh position={[0, DIORAMA_WALL_H + 0.42, -0.35]}>
+        <sphereGeometry args={[DIORAMA_DOME_R, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2.35]} />
         <meshStandardMaterial color={theme.roofColor} roughness={0.82} side={THREE.BackSide} />
       </mesh>
-
       {/* Window on left wall — built in */}
       <group position={[-DIORAMA_FLOOR_W / 2 + 0.1, 1.35, -0.5]} rotation={[0, Math.PI / 2, 0]}>
         <mesh>

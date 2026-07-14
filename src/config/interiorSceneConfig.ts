@@ -26,7 +26,8 @@ export type InteriorPropType =
   | 'heart-note'
   | 'teddy'
   | 'doormat'
-  | 'shop';
+  | 'shop'
+  | 'curtain';
 
 export interface InteriorProp {
   id: string;
@@ -82,9 +83,9 @@ export const ADAM_HOUSE_SCENE: InteriorSceneConfig = {
     fabricColor: '#6b9080',
     roofColor: '#a16207',
   },
-  playerStart: { x: 1.8, z: 1.4 },
-  npcStart: { x: 0.5, z: 0.1 },
-  walkBounds: { minX: -2.4, maxX: 2.4, minZ: -1.8, maxZ: 2.0 },
+  playerStart: { x: 1.6, z: 1.35 },
+  npcStart: { x: 0.45, z: 0.05 },
+  walkBounds: { minX: -2.55, maxX: 2.55, minZ: -2.05, maxZ: 2.15 },
   collisions: [
     { id: 'bed', x: -2.0, z: -0.9, halfW: 0.95, halfD: 0.55 },
     { id: 'nightstand', x: -1.15, z: -1.15, halfW: 0.28, halfD: 0.22 },

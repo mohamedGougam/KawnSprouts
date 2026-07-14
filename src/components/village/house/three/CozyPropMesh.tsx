@@ -2,7 +2,8 @@ import { useRef } from 'react';
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
-import type { InteriorProp, InteriorTheme } from '../../../../config/interiorSceneConfig';
+import type { InteriorProp, InteriorPropType, InteriorTheme } from '../../../../config/interiorSceneConfig';
+import { hasHouseOwnedItem } from '../../../../services/houseDecorService';
 import { playHouseSound, type HouseSoundType } from '../../../../services/houseAudioService';
 
 const SOUND_COOLDOWN_MS = 420;
@@ -15,15 +16,102 @@ function playPropSound(sound: HouseSoundType) {
   playHouseSound(sound);
 }
 
+function propHitSize(type: InteriorPropType): [number, number, number] {
+  switch (type) {
+    case 'bed':
+      return [2.05, 0.72, 1.18];
+    case 'table':
+      return [1.05, 0.72, 1.05];
+    case 'chair':
+      return [0.72, 0.82, 0.72];
+    case 'shelf':
+      return [1.55, 0.62, 0.52];
+    case 'rug':
+      return [1.92, 0.18, 1.92];
+    case 'door':
+      return [0.82, 1.2, 0.55];
+    case 'nightstand':
+      return [0.58, 0.62, 0.52];
+    case 'plant-floor':
+    case 'plant':
+      return [0.62, 0.72, 0.62];
+    case 'chest':
+      return [0.68, 0.58, 0.58];
+    case 'painting':
+      return [0.58, 0.48, 0.28];
+    case 'clock':
+      return [0.42, 0.42, 0.28];
+    case 'teddy':
+      return [0.5, 0.5, 0.5];
+    case 'curtain':
+      return [0.22, 0.62, 0.16];
+    case 'heart-note':
+      return [0.38, 0.38, 0.22];
+    default:
+      return [0.62, 0.58, 0.62];
+  }
+}
+
+function propHitCenterY(type: InteriorPropType): number {
+  if (type === 'rug') return 0.08;
+  if (type === 'painting' || type === 'clock' || type === 'shelf') return 0.45;
+  if (type === 'door') return 0.55;
+  if (type === 'curtain') return 0.24;
+  return 0.28;
+}
+
+function defaultPropClick(
+  prop: InteriorProp,
+  onClick: (e: ThreeEvent<MouseEvent>, sound?: HouseSoundType, fn?: () => void) => void,
+  onDoorExit?: () => void,
+) {
+  switch (prop.type) {
+    case 'door':
+      return (e: ThreeEvent<MouseEvent>) => onClick(e, 'door-creak', onDoorExit);
+    case 'bed':
+      return (e: ThreeEvent<MouseEvent>) => onClick(e, 'cushion');
+    case 'table':
+    case 'nightstand':
+    case 'chest':
+      return (e: ThreeEvent<MouseEvent>) => onClick(e, 'wood-knock');
+    case 'chair':
+      return (e: ThreeEvent<MouseEvent>) => onClick(e, 'wood-bounce');
+    case 'shelf':
+    case 'book':
+      return (e: ThreeEvent<MouseEvent>) => onClick(e, 'page-turn');
+    case 'rug':
+      return (e: ThreeEvent<MouseEvent>) => onClick(e, 'cushion');
+    case 'teacup':
+      return (e: ThreeEvent<MouseEvent>) => onClick(e, 'steam');
+    case 'vase':
+      return (e: ThreeEvent<MouseEvent>) => onClick(e, 'wood-knock');
+    case 'plant-floor':
+    case 'plant':
+      return (e: ThreeEvent<MouseEvent>) => onClick(e, 'leaf-rustle');
+    case 'clock':
+      return (e: ThreeEvent<MouseEvent>) => onClick(e, 'clock-tick');
+    case 'painting':
+      return (e: ThreeEvent<MouseEvent>) => onClick(e, 'wood-knock');
+    case 'teddy':
+      return (e: ThreeEvent<MouseEvent>) => onClick(e, 'cushion');
+    case 'heart-note':
+      return (e: ThreeEvent<MouseEvent>) =>
+        onClick(e, prop.id.includes('wind-chime') ? 'chime-soft' : 'chime-soft');
+    default:
+      return (e: ThreeEvent<MouseEvent>) => onClick(e, 'wood-knock');
+  }
+}
+
 interface CozyPropMeshProps {
   prop: InteriorProp;
   theme: InteriorTheme;
   onDoorExit?: () => void;
   lampOn: boolean;
   onLampToggle: () => void;
+  ownedItemIds?: string[];
 }
 
-export function CozyPropMesh({ prop, theme, onDoorExit, lampOn, onLampToggle }: CozyPropMeshProps) {
+export function CozyPropMesh({ prop, theme, onDoorExit, lampOn, onLampToggle, ownedItemIds = [] }: CozyPropMeshProps) {
   const animRef = useRef(0);
   const ref = useRef<THREE.Group>(null);
   const s = prop.scale ?? 1;
@@ -51,8 +139,12 @@ export function CozyPropMesh({ prop, theme, onDoorExit, lampOn, onLampToggle }: 
   };
 
   if (prop.type === 'lamp') {
+    const starGlow = ownedItemIds.includes('star-lantern');
     return (
       <group ref={ref} position={[prop.x, prop.y, prop.z]} scale={s}>
+        <mesh visible={false} onClick={(e) => click(e, 'chime-soft', onLampToggle)}>
+          <sphereGeometry args={[0.38, 10, 10]} />
+        </mesh>
         <mesh
           onClick={(e) => click(e, 'chime-soft', onLampToggle)}
           castShadow
@@ -61,7 +153,7 @@ export function CozyPropMesh({ prop, theme, onDoorExit, lampOn, onLampToggle }: 
           <meshStandardMaterial
             color="#fef08a"
             emissive="#fbbf24"
-            emissiveIntensity={lampOn ? 0.85 : 0.25}
+            emissiveIntensity={lampOn ? (starGlow ? 1.2 : 0.85) : starGlow ? 0.45 : 0.25}
           />
         </mesh>
         <mesh position={[0, -0.18, 0]}>
@@ -72,6 +164,10 @@ export function CozyPropMesh({ prop, theme, onDoorExit, lampOn, onLampToggle }: 
     );
   }
 
+  const [hitW, hitH, hitD] = propHitSize(prop.type);
+  const hitY = propHitCenterY(prop.type);
+  const handleHit = defaultPropClick(prop, click, onDoorExit);
+
   return (
     <group
       ref={ref}
@@ -79,10 +175,14 @@ export function CozyPropMesh({ prop, theme, onDoorExit, lampOn, onLampToggle }: 
       rotation={[0, prop.rotation ?? 0, 0]}
       scale={s}
     >
+      <mesh visible={false} position={[0, hitY, 0]} onClick={handleHit}>
+        <boxGeometry args={[hitW, hitH, hitD]} />
+      </mesh>
       <PropShape
         prop={prop}
         theme={theme}
         lampOn={lampOn}
+        ownedItemIds={ownedItemIds}
         onClick={click}
         onDoorExit={onDoorExit}
       />
@@ -95,32 +195,37 @@ function PropShape({
   theme,
   onClick,
   onDoorExit,
+  ownedItemIds = [],
 }: {
   prop: InteriorProp;
   theme: InteriorTheme;
   lampOn: boolean;
+  ownedItemIds?: string[];
   onClick: (e: ThreeEvent<MouseEvent>, sound?: HouseSoundType, fn?: () => void) => void;
   onDoorExit?: () => void;
 }) {
+  const owned = (id: string) => hasHouseOwnedItem(ownedItemIds, id);
   const wood = <meshStandardMaterial color={theme.trimColor} roughness={0.78} />;
   const woodLight = <meshStandardMaterial color="#a67c52" roughness={0.8} />;
 
   switch (prop.type) {
-    case 'bed':
+    case 'bed': {
+      const fabricColor = owned('bed-sheets') ? '#bfdbfe' : theme.fabricColor;
       return (
         <group onClick={(e) => onClick(e, 'cushion')}>
           <RoundedBox args={[1.85, 0.32, 1.05]} radius={0.1} position={[0, 0.18, 0]} castShadow>
-            <meshStandardMaterial color={theme.fabricColor} roughness={0.92} />
+            <meshStandardMaterial color={fabricColor} roughness={0.92} />
           </RoundedBox>
           <RoundedBox args={[0.35, 0.22, 1.0]} radius={0.06} position={[-0.72, 0.38, 0]} castShadow>
             <meshStandardMaterial color="#fef3c7" roughness={0.95} />
           </RoundedBox>
           <mesh position={[0, 0.38, 0.15]} castShadow>
             <boxGeometry args={[1.6, 0.08, 0.85]} />
-            <meshStandardMaterial color={theme.fabricColor} roughness={0.95} />
+            <meshStandardMaterial color={fabricColor} roughness={0.95} />
           </mesh>
         </group>
       );
+    }
     case 'nightstand':
       return (
         <RoundedBox args={[0.42, 0.48, 0.38]} radius={0.05} onClick={(e) => onClick(e, 'wood-knock')} castShadow>
@@ -136,7 +241,7 @@ function PropShape({
           receiveShadow
         >
           <circleGeometry args={[0.88, 40]} />
-          <meshStandardMaterial color={theme.rugColor} roughness={0.98} />
+          <meshStandardMaterial color={owned('woven-rug') ? '#fb7185' : theme.rugColor} roughness={0.98} />
         </mesh>
       );
     case 'table':
@@ -146,6 +251,12 @@ function PropShape({
             <cylinderGeometry args={[0.42, 0.44, 0.07, 24]} />
             {woodLight}
           </mesh>
+          {owned('table-cloth') && (
+            <mesh position={[0, 0.33, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[0.38, 24]} />
+              <meshStandardMaterial color="#fca5a5" transparent opacity={0.85} roughness={0.95} />
+            </mesh>
+          )}
           <mesh position={[0, 0.14, 0]} castShadow>
             <cylinderGeometry args={[0.06, 0.08, 0.28, 12]} />
             {wood}
@@ -189,10 +300,18 @@ function PropShape({
       );
     case 'vase':
       return (
-        <mesh onClick={(e) => onClick(e, 'wood-knock')} castShadow>
-          <cylinderGeometry args={[0.05, 0.07, 0.12, 10]} />
-          <meshStandardMaterial color="#d97706" roughness={0.65} />
-        </mesh>
+        <group onClick={(e) => onClick(e, 'wood-knock')}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.05, 0.07, 0.12, 10]} />
+            <meshStandardMaterial color="#d97706" roughness={0.65} />
+          </mesh>
+          {owned('flower-vase') && (
+            <mesh position={[0, 0.1, 0]} castShadow>
+              <sphereGeometry args={[0.05, 8, 8]} />
+              <meshStandardMaterial color="#f472b6" roughness={0.8} />
+            </mesh>
+          )}
+        </group>
       );
     case 'door':
       return (
@@ -239,6 +358,12 @@ function PropShape({
             <sphereGeometry args={[0.07, 10, 10]} />
             <meshStandardMaterial color="#4ade80" />
           </mesh>
+          {owned('wooden-toy') && (
+            <mesh position={[-0.55, 0.14, 0.02]} onClick={(e) => onClick(e, 'cushion')} castShadow>
+              <sphereGeometry args={[0.08, 10, 10]} />
+              <meshStandardMaterial color="#a16207" roughness={0.9} />
+            </mesh>
+          )}
         </group>
       );
     case 'clock':
@@ -257,7 +382,7 @@ function PropShape({
           </mesh>
           <mesh position={[0, 0, 0.03]}>
             <boxGeometry args={[0.36, 0.26, 0.02]} />
-            <meshStandardMaterial color="#fde68a" />
+            <meshStandardMaterial color={owned('sun-painting') ? '#fde047' : '#fde68a'} />
           </mesh>
         </group>
       );
@@ -296,9 +421,16 @@ function PropShape({
       );
     case 'heart-note':
       return (
-        <mesh onClick={(e) => onClick(e, 'chime-soft')}>
+        <mesh onClick={(e) => onClick(e, prop.id.includes('wind-chime') ? 'chime-soft' : 'chime-soft')}>
           <boxGeometry args={[0.1, 0.1, 0.02]} />
-          <meshStandardMaterial color="#fecdd3" />
+          <meshStandardMaterial color={prop.id.includes('wind-chime') ? '#bae6fd' : '#fecdd3'} />
+        </mesh>
+      );
+    case 'curtain':
+      return (
+        <mesh>
+          <boxGeometry args={[0.07, 0.48, 0.02]} />
+          <meshStandardMaterial color="#fff" transparent opacity={0.82} roughness={0.95} />
         </mesh>
       );
     case 'teddy':

@@ -6,6 +6,7 @@ import type { InteriorSceneConfig } from '../../../../config/interiorSceneConfig
 import type { SproutColor } from '../../../../models';
 import type { FurniturePlacement } from '../../../../features/shop/models/shopTypes';
 import { placementsToInteriorProps } from '../../../../features/shop/services/furnitureService';
+import { buildHouseInteriorProps } from '../../../../services/houseDecorService';
 import { CozyDioramaShell } from './CozyDioramaShell';
 import { CozyPropMesh } from './CozyPropMesh';
 import { InteriorCameraRig } from './InteriorCamera';
@@ -14,6 +15,7 @@ import {
   INTERIOR_CHARACTER_HEIGHT,
   INTERIOR_DPR_MAX,
   INTERIOR_DPR_MIN,
+  INTERIOR_FLOOR_CLICK_RADIUS,
   INTERIOR_MARKER_DISTANCE,
   INTERIOR_MARKER_SCALE,
   INTERIOR_SHADOW_RADIUS,
@@ -31,6 +33,7 @@ export interface CozyHouseSceneProps {
   interactive: boolean;
   onDoorExit: () => void;
   furniturePlacements?: FurniturePlacement[];
+  ownedItemIds?: string[];
   hatOverlay?: string | null;
   hatOffset?: { offsetX?: number; offsetY?: number; scale?: number } | null;
 }
@@ -162,6 +165,7 @@ function SceneContent({
   interactive,
   onDoorExit,
   furniturePlacements = [],
+  ownedItemIds = [],
   hatOverlay,
   hatOffset,
 }: CozyHouseSceneProps) {
@@ -189,7 +193,13 @@ function SceneContent({
     targetPos.current.set(next.x, 0.02, next.z);
   };
 
-  const renderProps = scene.props.filter((p) => p.type !== 'window');
+  const renderProps = useMemo(
+    () => buildHouseInteriorProps(
+      scene.props.filter((p) => p.type !== 'window'),
+      ownedItemIds,
+    ),
+    [scene.props, ownedItemIds],
+  );
   const shopProps = useMemo(
     () => placementsToInteriorProps(furniturePlacements),
     [furniturePlacements],
@@ -203,7 +213,7 @@ function SceneContent({
       <CozyDioramaShell theme={scene.theme} themeTime={theme} lampOn={lampOn} />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]} onClick={onFloorClick}>
-        <circleGeometry args={[2.6, 24]} />
+        <circleGeometry args={[INTERIOR_FLOOR_CLICK_RADIUS, 32]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
@@ -213,6 +223,7 @@ function SceneContent({
           prop={prop}
           theme={scene.theme}
           lampOn={lampOn}
+          ownedItemIds={ownedItemIds}
           onLampToggle={() => setLampOn((v) => !v)}
           onDoorExit={prop.type === 'door' ? onDoorExit : undefined}
         />

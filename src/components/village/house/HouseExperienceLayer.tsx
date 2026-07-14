@@ -30,7 +30,7 @@ interface HouseExperienceLayerProps {
   currency: CurrencyBalance;
   houseProgress: HouseProgress;
   soundEnabled: boolean;
-  onBuyItem: (id: string) => void;
+  onBuyItem: (id: string) => { success: boolean; message?: string };
   onRequestExit: () => void;
   furniturePlacements?: FurniturePlacement[];
   hatOverlay?: string | null;
