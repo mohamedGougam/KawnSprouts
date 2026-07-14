@@ -2,10 +2,11 @@ import type { GrowthStage } from '../models';
 import { waterYourKawniee } from './terminology';
 
 export const STORAGE_KEY = 'kawn-sprouts-game-state';
-export const STORAGE_VERSION = 8;
+export const STORAGE_VERSION = 9;
 
-/** One-time test wallet grant applied on migration to v8 */
-export const TEST_WALLET_GRANT = 1000;
+/** Starting shop wallet for new players */
+export const STARTING_GOLD = 550;
+export const STARTING_DIAMONDS = 550;
 
 export const GROWTH_STAGE_THRESHOLDS: Record<GrowthStage, { min: number; max: number; label: string }> = {
   tinySeedling: { min: 0, max: 99, label: 'Tiny Seedling' },

@@ -1,5 +1,5 @@
 import type { PersistedGameState } from '../models';
-import { STORAGE_KEY, STORAGE_VERSION, TEST_WALLET_GRANT } from '../config/gameConfig';
+import { STORAGE_KEY, STORAGE_VERSION } from '../config/gameConfig';
 import { normalizeWorldPosition } from '../config/villageConfig';
 import { migrateLegacyChats } from '../services/villageChatService';
 import { ensureTreasureDay } from '../services/treasureService';
@@ -79,14 +79,6 @@ export class LocalStorageGameStateRepository implements GameStateRepository {
       }
     }
     merged.treasureCollection = ensureTreasureDay(merged.treasureCollection);
-    const prevVersion = state.version ?? 0;
-    if (prevVersion < 8) {
-      merged.currency = {
-        ...merged.currency,
-        gold: (merged.currency.gold ?? 0) + TEST_WALLET_GRANT,
-        diamonds: (merged.currency.diamonds ?? 0) + TEST_WALLET_GRANT,
-      };
-    }
     return merged;
   }
 }

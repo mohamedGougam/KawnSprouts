@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from '../app/store/gameStore';
 import { createDefaultState } from '../data/initialData';
 import { LocalStorageGameStateRepository } from '../repositories/GameStateRepository';
-import { STORAGE_KEY } from '../config/gameConfig';
+import { STORAGE_KEY, STARTING_DIAMONDS } from '../config/gameConfig';
 import {
   canShowAge,
   getGrowthStageFromPoints,
@@ -285,10 +285,10 @@ describe('Kawn Sprouts', () => {
   it('collecting treasure adds diamonds and persists', () => {
     const r = useGameStore.getState().collectTreasure('gem-1');
     expect(r.success).toBe(true);
-    expect(useGameStore.getState().currency.diamonds).toBe(1);
+    expect(useGameStore.getState().currency.diamonds).toBe(STARTING_DIAMONDS + 1);
     useGameStore.getState().persist();
     const loaded = new LocalStorageGameStateRepository().load();
-    expect(loaded?.currency.diamonds).toBe(1);
+    expect(loaded?.currency.diamonds).toBe(STARTING_DIAMONDS + 1);
     expect(loaded?.treasureCollection.collectedToday).toContain('gem-1');
   });
 

@@ -1,4 +1,5 @@
 import { PLAYER_DEFAULT_POSITION } from '../config/villageConfig';
+import { STARTING_DIAMONDS, STARTING_GOLD } from '../config/gameConfig';
 import type {
   Butterfly,
   Flower,
@@ -139,7 +140,7 @@ export function createDefaultState(): PersistedGameState {
       paused: false,
       warmWelcomeAvailable: false,
     },
-    currency: { gardenCoins: 200, heartSeeds: 15, diamonds: 1000, gold: 1000 },
+    currency: { gardenCoins: 200, heartSeeds: 15, diamonds: STARTING_DIAMONDS, gold: STARTING_GOLD },
     currencyTransactions: [],
     notifications: [],
     settings: {

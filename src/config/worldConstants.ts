@@ -1,11 +1,11 @@
 /** Premium cozy-world constants */
 export const WORLD_SIZE = 3600;
 
-export const COZY_CAMERA_ZOOM = 2.4;
+export const COZY_CAMERA_ZOOM = 1.0;
 export const CAMERA_ZOOM_MIN = 1.0;
 export const CAMERA_ZOOM_MAX = 2.8;
 
-/** Player sprite ~52px tall; at 2.4 zoom ≈ 10% of ~1250px viewport height */
+/** Player sprite ~52px tall; at default zoom ≈ 4% of ~1250px viewport height */
 export const PLAYER_SCREEN_HEIGHT_RATIO = 0.1;
 
 export const CHUNK_SIZE = 600;
