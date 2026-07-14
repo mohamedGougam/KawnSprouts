@@ -707,31 +707,31 @@ export function VillageWorldView() {
       </div>
 
       {!outdoorsSuspended && (
-        <div className="pointer-events-none absolute bottom-24 left-1/2 z-40 flex -translate-x-1/2 flex-col items-center gap-2">
+        <div className="pointer-events-none absolute bottom-24 left-1/2 z-40 flex max-w-[min(100%,16rem)] -translate-x-1/2 flex-col items-center gap-1.5 px-2">
           <button
             type="button"
             onClick={goToMarket}
-            className="focus-ring pointer-events-auto flex items-center gap-2 rounded-full bg-amber-400/95 px-5 py-3 text-sm font-semibold text-white shadow-lg backdrop-blur-sm"
+            className="focus-ring pointer-events-auto flex w-full items-center justify-center gap-1.5 rounded-full border border-white/20 bg-amber-400/50 px-3 py-1.5 text-xs font-medium text-white/95 shadow-sm backdrop-blur-md transition-colors hover:bg-amber-400/65"
           >
-            <ShoppingBag size={18} />
+            <ShoppingBag size={14} strokeWidth={2.25} />
             Take me to the market
           </button>
           {nearestFriendNpc && (
             <button
               type="button"
               onClick={() => walkTo(nearestFriendNpc.position)}
-              className="focus-ring pointer-events-auto flex items-center gap-2 rounded-full bg-violet-400/95 px-5 py-3 text-sm font-semibold text-white shadow-lg backdrop-blur-sm"
+              className="focus-ring pointer-events-auto flex w-full items-center justify-center gap-1.5 rounded-full border border-white/20 bg-violet-400/50 px-3 py-1.5 text-xs font-medium text-white/95 shadow-sm backdrop-blur-md transition-colors hover:bg-violet-400/65"
             >
-              <Users size={18} />
+              <Users size={14} strokeWidth={2.25} />
               Visit nearby {TERMINOLOGY.species.singular}
             </button>
           )}
           <button
             type="button"
             onClick={() => walkTo(HOME_POSITION)}
-            className="focus-ring pointer-events-auto flex items-center gap-2 rounded-full bg-orange-400/95 px-5 py-3 text-sm font-semibold text-white shadow-lg backdrop-blur-sm"
+            className="focus-ring pointer-events-auto flex w-full items-center justify-center gap-1.5 rounded-full border border-white/20 bg-orange-400/50 px-3 py-1.5 text-xs font-medium text-white/95 shadow-sm backdrop-blur-md transition-colors hover:bg-orange-400/65"
           >
-            <Home size={18} />
+            <Home size={14} strokeWidth={2.25} />
             Take me home
           </button>
         </div>
@@ -748,7 +748,7 @@ export function VillageWorldView() {
             }
             if (soundEnabled) playShopSound('bike-bell', true);
           }}
-          className="focus-ring absolute bottom-36 right-4 z-40 flex min-h-[44px] items-center gap-2 rounded-full bg-sky-400/95 px-4 py-2.5 text-sm font-semibold text-white shadow-lg backdrop-blur-sm"
+          className="focus-ring absolute bottom-36 right-4 z-40 flex min-h-[36px] items-center gap-1.5 rounded-full border border-white/20 bg-sky-400/50 px-3 py-1.5 text-xs font-medium text-white/95 shadow-sm backdrop-blur-md transition-colors hover:bg-sky-400/65"
           aria-label={equippedVehicle.mounted ? 'Hop off bicycle' : 'Ride bicycle'}
         >
           {equippedVehicle.mounted ? 'Hop off' : 'Ride'}
