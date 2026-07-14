@@ -70,7 +70,7 @@ import {
   TERMINOLOGY,
   namedYourKawniee,
 } from '../../config/terminology';
-import { Bike, Droplets, Heart, Home, MapPin, ShoppingBag, Users, ZoomIn, ZoomOut } from 'lucide-react';
+import { Bike, Droplets, Heart, Home, MapPin, ShoppingBag, Users } from 'lucide-react';
 
 type SheetType = 'own' | 'other' | 'object' | 'wildlife' | null;
 
@@ -168,7 +168,7 @@ export function VillageWorldView() {
     createWildlifeStates(theme === 'night'),
   );
 
-  const { camera, screenToWorld, zoom, zoomIn, zoomOut, resetPan, consumeTapBlock, labelScale } = useCozyCamera(
+  const { camera, screenToWorld, zoom, resetPan, consumeTapBlock, labelScale } = useCozyCamera(
     displayPos,
     isMoving,
     viewportRef,
@@ -431,28 +431,13 @@ export function VillageWorldView() {
         <motion.div
           animate={{ y: isMoving ? '-100%' : 0, opacity: isMoving ? 0 : 1 }}
           transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-          className="flex items-center justify-between gap-2 bg-black/10 px-4 pb-2 pt-3 backdrop-blur-sm"
+          className="flex items-center justify-center bg-black/10 px-4 pb-2 pt-3 backdrop-blur-sm"
         >
-        <div>
-          <h1 className="text-lg font-bold text-white drop-shadow">{TERMINOLOGY.world.name}</h1>
-          <p className="text-xs text-white/90 drop-shadow">Tap to explore · Pinch or − to zoom out</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 rounded-full bg-white/85 px-2.5 py-1 text-xs font-semibold text-gray-800 shadow-sm">
+          <div className="flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-xs font-semibold text-gray-800 shadow-sm">
             <span>💎 {currency.diamonds}</span>
             <span className="text-gray-300">|</span>
             <span>🪙 {currency.gold}</span>
           </div>
-          <div className="flex items-center gap-1 rounded-full bg-white/80 p-1 shadow-sm">
-          <button type="button" onClick={zoomOut} className="focus-ring rounded-full p-2" aria-label="Zoom out">
-            <ZoomOut size={18} />
-          </button>
-          <span className="min-w-[2.75rem] text-center text-xs font-medium text-gray-700">{Math.round(zoom * 100)}%</span>
-          <button type="button" onClick={zoomIn} className="focus-ring rounded-full p-2" aria-label="Zoom in">
-            <ZoomIn size={18} />
-          </button>
-        </div>
-        </div>
         </motion.div>
       </div>
 
