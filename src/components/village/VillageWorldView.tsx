@@ -70,7 +70,7 @@ import {
   TERMINOLOGY,
   namedYourKawniee,
 } from '../../config/terminology';
-import { Droplets, Heart, Home, MapPin, ShoppingBag, Users, ZoomIn, ZoomOut } from 'lucide-react';
+import { Bike, Droplets, Heart, Home, MapPin, ShoppingBag, Users, ZoomIn, ZoomOut } from 'lucide-react';
 
 type SheetType = 'own' | 'other' | 'object' | 'wildlife' | null;
 
@@ -168,7 +168,11 @@ export function VillageWorldView() {
     createWildlifeStates(theme === 'night'),
   );
 
-  const { camera, screenToWorld, zoom, zoomIn, zoomOut, labelScale } = useCozyCamera(displayPos, isMoving, viewportRef);
+  const { camera, screenToWorld, zoom, zoomIn, zoomOut, resetPan, consumeTapBlock, labelScale } = useCozyCamera(
+    displayPos,
+    isMoving,
+    viewportRef,
+  );
 
   const { sfxEnabled: soundEnabled } = useVillageAudio({
     musicEnabled: settings.musicEnabled,
@@ -330,11 +334,12 @@ export function VillageWorldView() {
 
   const handleMapPointer = useCallback(
     (clientX: number, clientY: number, target: EventTarget | null) => {
-      if (outdoorsSuspended) return;
+      if (outdoorsSuspended || consumeTapBlock()) return;
       unlockAudio();
       if ((target as HTMLElement)?.closest('[data-world-entity]')) return;
       const rect = viewportRef.current?.getBoundingClientRect();
       if (!rect) return;
+      resetPan();
       const world = screenToWorld(clientX, clientY, rect);
       const snapped = {
         x: Math.round(Math.max(80, Math.min(WORLD_SIZE - 80, world.x))),
@@ -350,7 +355,7 @@ export function VillageWorldView() {
       }
       walkTo(snapped);
     },
-    [screenToWorld, walkTo, outdoorsSuspended, equippedVehicle.mounted],
+    [screenToWorld, walkTo, outdoorsSuspended, equippedVehicle.mounted, consumeTapBlock, resetPan],
   );
 
   const handleHouseTap = useCallback(
@@ -417,9 +422,17 @@ export function VillageWorldView() {
 
   const wildlifeById = useMemo(() => Object.fromEntries(WILDLIFE.map((a) => [a.id, a])), []);
 
+  const navBtnClass =
+    'focus-ring pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full border border-white/25 text-white shadow-sm backdrop-blur-md transition-colors';
+
   return (
     <div className="relative flex h-[calc(100dvh-5rem)] flex-col overflow-hidden bg-sky-100">
-      <div className="relative z-10 flex shrink-0 items-center justify-between gap-2 bg-black/10 px-4 pb-2 pt-3 backdrop-blur-sm">
+      <div className="relative z-10 shrink-0 overflow-hidden">
+        <motion.div
+          animate={{ y: isMoving ? '-100%' : 0, opacity: isMoving ? 0 : 1 }}
+          transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+          className="flex items-center justify-between gap-2 bg-black/10 px-4 pb-2 pt-3 backdrop-blur-sm"
+        >
         <div>
           <h1 className="text-lg font-bold text-white drop-shadow">{TERMINOLOGY.world.name}</h1>
           <p className="text-xs text-white/90 drop-shadow">Tap to explore · Pinch or − to zoom out</p>
@@ -440,6 +453,7 @@ export function VillageWorldView() {
           </button>
         </div>
         </div>
+        </motion.div>
       </div>
 
       <div
@@ -450,8 +464,12 @@ export function VillageWorldView() {
           pointerEvents: outdoorsSuspended ? 'none' : 'auto',
           transition: 'opacity 0.25s ease',
         }}
-        onClick={(e) => handleMapPointer(e.clientX, e.clientY, e.target)}
+        onClick={(e) => {
+          if (consumeTapBlock()) return;
+          handleMapPointer(e.clientX, e.clientY, e.target);
+        }}
         onTouchEnd={(e) => {
+          if (consumeTapBlock()) return;
           const t = e.changedTouches[0];
           if (t) handleMapPointer(t.clientX, t.clientY, e.target);
         }}
@@ -707,52 +725,51 @@ export function VillageWorldView() {
       </div>
 
       {!outdoorsSuspended && (
-        <div className="pointer-events-none absolute bottom-24 left-1/2 z-40 flex max-w-[min(100%,16rem)] -translate-x-1/2 flex-col items-center gap-1.5 px-2">
+        <div className="pointer-events-none absolute bottom-24 left-3 z-40 flex flex-col gap-2">
           <button
             type="button"
             onClick={goToMarket}
-            className="focus-ring pointer-events-auto flex w-full items-center justify-center gap-1.5 rounded-full border border-white/20 bg-amber-400/50 px-3 py-1.5 text-xs font-medium text-white/95 shadow-sm backdrop-blur-md transition-colors hover:bg-amber-400/65"
+            className={`${navBtnClass} bg-amber-400/55 hover:bg-amber-400/75`}
+            aria-label="Take me to the market"
           >
-            <ShoppingBag size={14} strokeWidth={2.25} />
-            Take me to the market
+            <ShoppingBag size={18} strokeWidth={2.25} />
           </button>
           {nearestFriendNpc && (
             <button
               type="button"
               onClick={() => walkTo(nearestFriendNpc.position)}
-              className="focus-ring pointer-events-auto flex w-full items-center justify-center gap-1.5 rounded-full border border-white/20 bg-violet-400/50 px-3 py-1.5 text-xs font-medium text-white/95 shadow-sm backdrop-blur-md transition-colors hover:bg-violet-400/65"
+              className={`${navBtnClass} bg-violet-400/55 hover:bg-violet-400/75`}
+              aria-label={`Visit nearby ${TERMINOLOGY.species.singular}`}
             >
-              <Users size={14} strokeWidth={2.25} />
-              Visit nearby {TERMINOLOGY.species.singular}
+              <Users size={18} strokeWidth={2.25} />
             </button>
           )}
           <button
             type="button"
             onClick={() => walkTo(HOME_POSITION)}
-            className="focus-ring pointer-events-auto flex w-full items-center justify-center gap-1.5 rounded-full border border-white/20 bg-orange-400/50 px-3 py-1.5 text-xs font-medium text-white/95 shadow-sm backdrop-blur-md transition-colors hover:bg-orange-400/65"
+            className={`${navBtnClass} bg-orange-400/55 hover:bg-orange-400/75`}
+            aria-label="Take me home"
           >
-            <Home size={14} strokeWidth={2.25} />
-            Take me home
+            <Home size={18} strokeWidth={2.25} />
           </button>
+          {equippedVehicle.vehicleId && (
+            <button
+              type="button"
+              onClick={() => {
+                if (equippedVehicle.mounted) {
+                  dismountShopVehicle();
+                } else {
+                  mountShopVehicle();
+                }
+                if (soundEnabled) playShopSound('bike-bell', true);
+              }}
+              className={`${navBtnClass} bg-sky-400/55 hover:bg-sky-400/75`}
+              aria-label={equippedVehicle.mounted ? 'Hop off bicycle' : 'Ride bicycle'}
+            >
+              <Bike size={18} strokeWidth={2.25} />
+            </button>
+          )}
         </div>
-      )}
-
-      {equippedVehicle.vehicleId && !outdoorsSuspended && (
-        <button
-          type="button"
-          onClick={() => {
-            if (equippedVehicle.mounted) {
-              dismountShopVehicle();
-            } else {
-              mountShopVehicle();
-            }
-            if (soundEnabled) playShopSound('bike-bell', true);
-          }}
-          className="focus-ring absolute bottom-36 right-4 z-40 flex min-h-[36px] items-center gap-1.5 rounded-full border border-white/20 bg-sky-400/50 px-3 py-1.5 text-xs font-medium text-white/95 shadow-sm backdrop-blur-md transition-colors hover:bg-sky-400/65"
-          aria-label={equippedVehicle.mounted ? 'Hop off bicycle' : 'Ride bicycle'}
-        >
-          {equippedVehicle.mounted ? 'Hop off' : 'Ride'}
-        </button>
       )}
 
       {actionMsg && (

@@ -27,6 +27,10 @@ export function useCozyCamera(
   const [zoom, setZoom] = useState(COZY_CAMERA_ZOOM);
   const zoomRef = useRef(COZY_CAMERA_ZOOM);
   const pinchRef = useRef<{ dist: number; zoom: number } | null>(null);
+  const panOffsetRef = useRef({ x: 0, y: 0 });
+  const singlePanRef = useRef<{ x: number; y: number; active: boolean } | null>(null);
+  const pointerPanRef = useRef<{ x: number; y: number; active: boolean; pointerId: number } | null>(null);
+  const tapBlockedRef = useRef(false);
 
   const cameraRef = useRef<CameraState>({
     x: playerPos.x,
@@ -45,6 +49,21 @@ export function useCozyCamera(
   const zoomOut = useCallback(() => setZoom((z) => clampZoom(z - ZOOM_STEP)), []);
   const resetZoom = useCallback(() => setZoom(COZY_CAMERA_ZOOM), []);
 
+  const resetPan = useCallback(() => {
+    panOffsetRef.current = { x: 0, y: 0 };
+  }, []);
+
+  const consumeTapBlock = useCallback(() => {
+    if (!tapBlockedRef.current) return false;
+    tapBlockedRef.current = false;
+    return true;
+  }, []);
+
+  const applyPanDelta = useCallback((dx: number, dy: number) => {
+    panOffsetRef.current.x -= dx / zoomRef.current;
+    panOffsetRef.current.y -= dy / zoomRef.current;
+  }, []);
+
   const tick = useCallback(() => {
     const viewport = viewportRef.current;
     if (!viewport) return;
@@ -62,11 +81,13 @@ export function useCozyCamera(
     const targetX =
       playerPos.x -
       vw / (2 * currentZoom) +
+      panOffsetRef.current.x +
       (isMoving ? velocityRef.current.x * CAMERA_ANTICIPATION * 0.02 : 0);
     const targetY =
       playerPos.y -
       vh / (2 * currentZoom) +
       CAMERA_VERTICAL_OFFSET / currentZoom +
+      panOffsetRef.current.y +
       (isMoving ? velocityRef.current.y * CAMERA_ANTICIPATION * 0.02 : 0);
 
     const maxX = Math.max(0, WORLD_SIZE - vw / currentZoom);
@@ -82,6 +103,10 @@ export function useCozyCamera(
   }, [playerPos, isMoving, viewportRef]);
 
   useEffect(() => {
+    if (isMoving) resetPan();
+  }, [isMoving, resetPan]);
+
+  useEffect(() => {
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
   }, [tick]);
@@ -92,24 +117,82 @@ export function useCozyCamera(
 
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
+        singlePanRef.current = null;
         const dx = e.touches[0].clientX - e.touches[1].clientX;
         const dy = e.touches[0].clientY - e.touches[1].clientY;
         pinchRef.current = { dist: Math.hypot(dx, dy), zoom: zoomRef.current };
+        return;
+      }
+      if (e.touches.length === 1) {
+        singlePanRef.current = {
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
+          active: false,
+        };
       }
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (e.touches.length !== 2 || !pinchRef.current) return;
+      if (e.touches.length === 2 && pinchRef.current) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        const scale = dist / pinchRef.current.dist;
+        setZoom(clampZoom(pinchRef.current.zoom * scale));
+        return;
+      }
+      const pan = singlePanRef.current;
+      if (e.touches.length !== 1 || !pan) return;
+      const t = e.touches[0];
+      const dx = t.clientX - pan.x;
+      const dy = t.clientY - pan.y;
+      if (!pan.active && Math.hypot(dx, dy) < 10) return;
+      if (!pan.active) {
+        pan.active = true;
+        tapBlockedRef.current = true;
+      }
       e.preventDefault();
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      const dist = Math.hypot(dx, dy);
-      const scale = dist / pinchRef.current.dist;
-      setZoom(clampZoom(pinchRef.current.zoom * scale));
+      applyPanDelta(dx, dy);
+      pan.x = t.clientX;
+      pan.y = t.clientY;
     };
 
     const onTouchEnd = () => {
       pinchRef.current = null;
+      singlePanRef.current = null;
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      pointerPanRef.current = {
+        x: e.clientX,
+        y: e.clientY,
+        active: false,
+        pointerId: e.pointerId,
+      };
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      const pan = pointerPanRef.current;
+      if (!pan || e.pointerId !== pan.pointerId) return;
+      const dx = e.clientX - pan.x;
+      const dy = e.clientY - pan.y;
+      if (!pan.active && Math.hypot(dx, dy) < 8) return;
+      if (!pan.active) {
+        pan.active = true;
+        tapBlockedRef.current = true;
+      }
+      e.preventDefault();
+      applyPanDelta(dx, dy);
+      pan.x = e.clientX;
+      pan.y = e.clientY;
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      if (pointerPanRef.current?.pointerId === e.pointerId) {
+        pointerPanRef.current = null;
+      }
     };
 
     const onWheel = (e: WheelEvent) => {
@@ -121,15 +204,23 @@ export function useCozyCamera(
     el.addEventListener('touchstart', onTouchStart, { passive: true });
     el.addEventListener('touchmove', onTouchMove, { passive: false });
     el.addEventListener('touchend', onTouchEnd);
+    el.addEventListener('pointerdown', onPointerDown);
+    el.addEventListener('pointermove', onPointerMove);
+    el.addEventListener('pointerup', onPointerUp);
+    el.addEventListener('pointercancel', onPointerUp);
     el.addEventListener('wheel', onWheel, { passive: false });
 
     return () => {
       el.removeEventListener('touchstart', onTouchStart);
       el.removeEventListener('touchmove', onTouchMove);
       el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('pointerdown', onPointerDown);
+      el.removeEventListener('pointermove', onPointerMove);
+      el.removeEventListener('pointerup', onPointerUp);
+      el.removeEventListener('pointercancel', onPointerUp);
       el.removeEventListener('wheel', onWheel);
     };
-  }, [viewportRef]);
+  }, [viewportRef, applyPanDelta]);
 
   const screenToWorld = useCallback(
     (clientX: number, clientY: number, rect: DOMRect): WorldPosition => {
@@ -149,6 +240,8 @@ export function useCozyCamera(
     zoomIn,
     zoomOut,
     resetZoom,
+    resetPan,
+    consumeTapBlock,
     labelScale: 1 / zoom,
   };
 }
