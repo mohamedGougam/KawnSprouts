@@ -68,6 +68,8 @@ export function useCozyCamera(
     const viewport = viewportRef.current;
     if (!viewport) return;
 
+    const cam = cameraRef.current;
+
     const vw = viewport.clientWidth;
     const vh = viewport.clientHeight;
     const currentZoom = zoomRef.current;
@@ -93,12 +95,23 @@ export function useCozyCamera(
     const maxX = Math.max(0, WORLD_SIZE - vw / currentZoom);
     const maxY = Math.max(0, WORLD_SIZE - vh / currentZoom);
 
-    const cam = cameraRef.current;
-    cam.x += (Math.max(0, Math.min(maxX, targetX)) - cam.x) * lag;
-    cam.y += (Math.max(0, Math.min(maxY, targetY)) - cam.y) * lag;
-    cam.zoom = currentZoom;
+    const targetClampedX = Math.max(0, Math.min(maxX, targetX));
+    const targetClampedY = Math.max(0, Math.min(maxY, targetY));
 
-    setCamera({ ...cam });
+    const newX = cam.x + (targetClampedX - cam.x) * lag;
+    const newY = cam.y + (targetClampedY - cam.y) * lag;
+
+    const diffX = Math.abs(newX - cam.x);
+    const diffY = Math.abs(newY - cam.y);
+    const diffZoom = Math.abs(currentZoom - cam.zoom);
+
+    if (diffX > 0.05 || diffY > 0.05 || diffZoom > 0.001) {
+      cam.x = newX;
+      cam.y = newY;
+      cam.zoom = currentZoom;
+      setCamera({ x: newX, y: newY, zoom: currentZoom });
+    }
+
     rafRef.current = requestAnimationFrame(tick);
   }, [playerPos, isMoving, viewportRef]);
 

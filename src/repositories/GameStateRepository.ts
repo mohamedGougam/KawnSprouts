@@ -6,7 +6,8 @@ import { ensureTreasureDay } from '../services/treasureService';
 import { createDefaultState } from '../data/initialData';
 
 export interface GameStateRepository {
-  load(): PersistedGameState | null;
+  /** May be async (API-backed) or sync-wrapped-in-Promise (localStorage) */
+  load(): Promise<PersistedGameState | null> | PersistedGameState | null;
   save(state: PersistedGameState): void;
   clear(): void;
 }
@@ -83,8 +84,8 @@ export class LocalStorageGameStateRepository implements GameStateRepository {
   }
 }
 
-export function loadStateWithFallback(repo: GameStateRepository): PersistedGameState {
-  const loaded = repo.load();
+export async function loadStateWithFallback(repo: GameStateRepository): Promise<PersistedGameState> {
+  const loaded = await repo.load();
   if (loaded) return loaded;
   return createDefaultState();
 }

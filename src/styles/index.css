@@ -59,6 +59,7 @@ body {
   position: relative;
   background: var(--color-cozy-cream);
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.08);
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 @media (min-width: 768px) {

@@ -10,9 +10,18 @@ export function useVisualViewportInsets() {
     if (!vv) return;
 
     const update = () => {
+      const activeEl = document.activeElement;
+      const isInputFocused =
+        activeEl !== null &&
+        (activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          (activeEl as HTMLElement).isContentEditable === true);
+
       const obscured = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      const keyboardOpen = isInputFocused && obscured > KEYBOARD_THRESHOLD_PX;
+
       setState({
-        keyboardOpen: obscured > KEYBOARD_THRESHOLD_PX,
+        keyboardOpen,
         bottomInset: obscured,
       });
     };

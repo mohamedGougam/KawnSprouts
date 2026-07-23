@@ -191,11 +191,29 @@ export function VillageWorldView() {
   });
 
   const [npcs, setNpcs] = useState<NpcState[]>(() =>
-    friends.map((f) => {
-      const start = FRIEND_WAYPOINTS[f.id]?.[0] ?? { x: 1800, y: 2400 };
-      return { id: f.id, position: start, waypointIndex: 0, path: [start], pathIndex: 0 };
+    friends.map((f, idx) => {
+      const defaultWaypoint = FRIEND_WAYPOINTS[f.id]?.[0] ?? {
+        x: 1600 + (idx * 150) % 700,
+        y: 2100 + (idx * 110) % 500,
+      };
+      return { id: f.id, position: defaultWaypoint, waypointIndex: 0, path: [defaultWaypoint], pathIndex: 0 };
     }),
   );
+
+  useEffect(() => {
+    setNpcs((prevNpcs) => {
+      const prevById = new Map(prevNpcs.map((n) => [n.id, n]));
+      return friends.map((f, idx) => {
+        const existing = prevById.get(f.id);
+        if (existing) return existing;
+        const defaultWaypoint = FRIEND_WAYPOINTS[f.id]?.[0] ?? {
+          x: 1600 + (idx * 150) % 700,
+          y: 2100 + (idx * 110) % 500,
+        };
+        return { id: f.id, position: defaultWaypoint, waypointIndex: 0, path: [defaultWaypoint], pathIndex: 0 };
+      });
+    });
+  }, [friends]);
 
   const friendById = useMemo(() => Object.fromEntries(friends.map((f) => [f.id, f])), [friends]);
 
@@ -458,11 +476,6 @@ export function VillageWorldView() {
         onClick={(e) => {
           if (consumeTapBlock()) return;
           handleMapPointer(e.clientX, e.clientY, e.target);
-        }}
-        onTouchEnd={(e) => {
-          if (consumeTapBlock()) return;
-          const t = e.changedTouches[0];
-          if (t) handleMapPointer(t.clientX, t.clientY, e.target);
         }}
         role="application"
         aria-label="Cozy explorable village world"

@@ -20,7 +20,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 border-t border-white/50 bg-white/90 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur-md"
+      className="fixed bottom-0 left-1/2 z-[9999] w-full max-w-[480px] -translate-x-1/2 border-t border-white/50 bg-white/90 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur-md"
       aria-label="Main navigation"
     >
       <ul className="flex items-center justify-around">

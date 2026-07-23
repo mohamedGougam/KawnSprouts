@@ -6,6 +6,11 @@ import { OnboardingFlow } from '../../features/onboarding/OnboardingFlow';
 import { VillageWorldView } from '../../components/village/VillageWorldView';
 import { GardenScene } from '../../components/garden/GardenScene';
 import { DecorationModePanel } from '../../components/decorations/DecorationModePanel';
+import { useKawnActivityPoll } from '../../hooks/useKawnActivityPoll';
+
+import { KawnApiGameStateRepository } from '../../repositories/KawnApiGameStateRepository';
+import { setActiveRepo } from '../store/gameStore';
+import { fetchKawnIdentity, getKawnLaunchParams } from '../../features/integration/kawnBridge';
 
 const ActivitiesPage = lazy(() => import('../../pages/ActivitiesPage').then((m) => ({ default: m.ActivitiesPage })));
 const FriendsPage = lazy(() => import('../../pages/FriendsPage').then((m) => ({ default: m.FriendsPage })));
@@ -26,14 +31,52 @@ function AppRoutes() {
   const hydrated = useGameStore((s) => s.hydrated);
   const onboardingComplete = useGameStore((s) => s.onboardingComplete);
   const hydrate = useGameStore((s) => s.hydrate);
+  const hydrateFromApi = useGameStore((s) => s.hydrateFromApi);
   const decorationMode = useGameStore((s) => s.decorationMode);
   const villageMoveMode = useGameStore((s) => s.villageMoveMode);
   const villageThreadOpen = useGameStore((s) => s.villageThreadOpen);
   const settings = useGameStore((s) => s.settings);
 
+  // Start polling for Kawn activity reward events (no-ops in dev/standalone mode)
+  useKawnActivityPoll();
+
   useEffect(() => {
-    hydrate();
-  }, [hydrate]);
+    async function boot() {
+      const { kawnUserId, displayName, age, kawnToken, apiBase } = getKawnLaunchParams();
+
+      if (kawnToken && apiBase) {
+        // ── Production path: running inside the Kawn Flutter WebView ──
+        try {
+          // Swap the store's repo to the API-backed one for all future saves
+          const apiRepo = new KawnApiGameStateRepository(apiBase, kawnToken);
+          setActiveRepo(apiRepo);
+
+          // Fetch saved state + identity in parallel to minimise boot time
+          const [serverState, identity] = await Promise.all([
+            apiRepo.load(),
+            fetchKawnIdentity(apiBase, kawnToken),
+          ]);
+
+          hydrateFromApi(
+            serverState,
+            identity?.kawnUserId ?? kawnUserId ?? undefined,
+            identity?.displayName ?? displayName ?? undefined,
+            identity?.age ?? age ?? undefined,
+            identity?.friends,
+          );
+        } catch (err) {
+          console.error('[Sprouts] API boot failed — falling back to localStorage:', err);
+          hydrate(); // Always safe to fall back
+        }
+      } else {
+        // ── Dev / standalone path: use localStorage as before ──
+        hydrate();
+      }
+    }
+
+    void boot();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle('reduce-motion', settings.reducedMotion);

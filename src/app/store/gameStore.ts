@@ -58,7 +58,15 @@ import {
 import { addFurniturePlacement } from '../../features/shop/services/furnitureService';
 import type { ShopCategory } from '../../features/shop/models/shopTypes';
 
-const repo = new LocalStorageGameStateRepository();
+// Mutable so AppRouter can swap in the API-backed repository at runtime.
+// Default: localStorage (works everywhere, no auth required).
+let _repo: LocalStorageGameStateRepository | import('../../repositories/KawnApiGameStateRepository').KawnApiGameStateRepository =
+  new LocalStorageGameStateRepository();
+
+/** Swap the active repository — called once by AppRouter after boot */
+export function setActiveRepo(next: typeof _repo) {
+  _repo = next;
+}
 
 interface GameStore extends PersistedGameState {
   hydrated: boolean;
@@ -74,6 +82,14 @@ interface GameStore extends PersistedGameState {
   villageThreadOpen: boolean;
 
   hydrate: () => void;
+  /** Boot from a pre-loaded server state + optional Kawn identity */
+  hydrateFromApi: (
+    serverState: PersistedGameState | null,
+    kawnUserId?: string,
+    kawnName?: string,
+    kawnAge?: number | null,
+    kawnFriends?: import('../../features/integration/kawnBridge').KawnFriend[],
+  ) => void;
   persist: () => void;
   resetPrototype: () => void;
 
@@ -205,10 +221,45 @@ export const useGameStore = create<GameStore>((set, get) => ({
   villageThreadOpen: false,
 
   hydrate: () => {
-    const state = loadStateWithFallback(repo);
+    // Sync path — used in dev/standalone mode where repo is localStorage
+    const raw = _repo.load();
+    // Handle the case where load() returns a Promise (API repo)
+    if (raw instanceof Promise) {
+      raw.then((state) => {
+        const resolved = state ?? createDefaultState();
+        const missions = ensureDailyMissions(resolved.missions);
+        const friendDailyLimits = ensureFriendLimits(resolved);
+        const treasureCollection = ensureTreasureDay(
+          resolved.treasureCollection ?? { resetDate: '', collectedToday: [] },
+        );
+        set({
+          ...resolved,
+          villagePosition: normalizeWorldPosition(resolved.villagePosition),
+          missions,
+          friendDailyLimits,
+          treasureCollection,
+          hydrated: true,
+          pendingGardenLayout: null,
+          decorationMode: false,
+          selectedDecorationId: null,
+          activeButterflyId: null,
+          showWelcomeBack: false,
+          welcomeBackMessage: '',
+          speechBubble: null,
+          lastTapTime: 0,
+          villageMoveMode: false,
+          villageThreadOpen: false,
+        });
+        get().checkWelcomeBack();
+      });
+      return;
+    }
+    const state = raw ?? createDefaultState();
     const missions = ensureDailyMissions(state.missions);
     const friendDailyLimits = ensureFriendLimits(state);
-    const treasureCollection = ensureTreasureDay(state.treasureCollection ?? { resetDate: '', collectedToday: [] });
+    const treasureCollection = ensureTreasureDay(
+      state.treasureCollection ?? { resetDate: '', collectedToday: [] },
+    );
     set({
       ...state,
       villagePosition: normalizeWorldPosition(state.villagePosition),
@@ -225,54 +276,143 @@ export const useGameStore = create<GameStore>((set, get) => ({
       speechBubble: null,
       lastTapTime: 0,
       villageMoveMode: false,
-  villageThreadOpen: false,
+      villageThreadOpen: false,
     });
     get().checkWelcomeBack();
   },
 
-  persist: () => {
-    const s = get();
+  hydrateFromApi: (serverState, kawnUserId, kawnName, kawnAge, kawnFriends) => {
+    const base = serverState ?? createDefaultState();
+
+    // Overlay real Kawn identity
+    const player = kawnUserId
+      ? { ...base.player, id: kawnUserId, name: kawnName ?? base.player.name, age: kawnAge ?? base.player.age }
+      : base.player;
+
+    let friends: PersistedGameState['friends'] = base.friends;
+
+    if (kawnUserId) {
+      const VALID_COLORS: SproutColor[] = ['mint', 'peach', 'lavender', 'sky', 'sunny'];
+      const VALID_AVATARS: PlayerAvatar[] = [
+        'pastel-smile',
+        'pastel-star',
+        'pastel-flower',
+        'pastel-heart',
+        'pastel-cloud',
+      ];
+
+      if (Array.isArray(kawnFriends)) {
+        friends = kawnFriends.map((f) => ({
+          id: f.id,
+          name: f.name,
+          age: undefined,
+          kawnAge: undefined,
+          level: f.level ?? 1,
+          avatar: f.avatar && VALID_AVATARS.includes(f.avatar) ? f.avatar : 'pastel-smile',
+          sproutName: f.sproutName ?? f.name,
+          sproutColor: f.sproutColor && VALID_COLORS.includes(f.sproutColor) ? f.sproutColor : 'mint',
+          gardenTheme: 'day',
+          recentActivity: '',
+          friendshipStatus: 'approved' as const,
+          privacy: { showAgeToFriends: false, allowVisits: true, allowGifts: true },
+          lastInteraction: new Date().toISOString(),
+        }));
+      } else if (serverState?.friends) {
+        // Strip legacy mock friends (lina, sami, noor, adam) if any were stored earlier
+        friends = serverState.friends.filter(
+          (f) => !['lina', 'sami', 'noor', 'adam'].includes(f.id.toLowerCase()),
+        );
+      } else {
+        friends = [];
+      }
+    }
+
     const state: PersistedGameState = {
-      version: s.version,
-      onboardingComplete: s.onboardingComplete,
-      player: s.player,
-      sprout: s.sprout,
-      garden: s.garden,
-      decorations: s.decorations,
-      flowers: s.flowers,
-      butterflies: s.butterflies,
-      friends: s.friends,
-      inventory: s.inventory,
-      giftTransactions: s.giftTransactions,
-      unopenedGiftCount: s.unopenedGiftCount,
-      missions: s.missions,
-      streak: s.streak,
-      currency: s.currency,
-      currencyTransactions: s.currencyTransactions,
-      notifications: s.notifications,
-      settings: s.settings,
-      activityCooldowns: s.activityCooldowns,
-      friendDailyLimits: s.friendDailyLimits,
-      lastActiveAt: s.lastActiveAt,
-      welcomeBackShown: s.welcomeBackShown,
-      activityLog: s.activityLog,
-      stats: s.stats,
-      lastWateredAt: s.lastWateredAt,
-      villagePosition: s.villagePosition,
-      discoveredWorldObjects: s.discoveredWorldObjects,
-      discoveredSecrets: s.discoveredSecrets,
-      villageMessages: s.villageMessages,
-      houseProgress: s.houseProgress,
-      treasureCollection: s.treasureCollection,
-      shopInventory: s.shopInventory,
-      equippedCosmetics: s.equippedCosmetics,
-      equippedVehicle: s.equippedVehicle,
-      furniturePlacements: s.furniturePlacements,
-      shopPurchaseHistory: s.shopPurchaseHistory,
-      shopState: s.shopState,
+      ...base,
+      onboardingComplete: kawnUserId ? true : base.onboardingComplete,
+      player,
+      friends,
     };
-    repo.save(state);
+    const missions = ensureDailyMissions(state.missions);
+    const friendDailyLimits = ensureFriendLimits(state);
+    const treasureCollection = ensureTreasureDay(
+      state.treasureCollection ?? { resetDate: '', collectedToday: [] },
+    );
+
+    set({
+      ...state,
+      villagePosition: normalizeWorldPosition(state.villagePosition),
+      missions,
+      friendDailyLimits,
+      treasureCollection,
+      hydrated: true,
+      pendingGardenLayout: null,
+      decorationMode: false,
+      selectedDecorationId: null,
+      activeButterflyId: null,
+      showWelcomeBack: false,
+      welcomeBackMessage: '',
+      speechBubble: null,
+      lastTapTime: 0,
+      villageMoveMode: false,
+      villageThreadOpen: false,
+    });
+    get().checkWelcomeBack();
   },
+
+  persist: (() => {
+    let _debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    return () => {
+      const s = get();
+      const state: PersistedGameState = {
+        version: s.version,
+        onboardingComplete: s.onboardingComplete,
+        player: s.player,
+        sprout: s.sprout,
+        garden: s.garden,
+        decorations: s.decorations,
+        flowers: s.flowers,
+        butterflies: s.butterflies,
+        friends: s.friends,
+        inventory: s.inventory,
+        giftTransactions: s.giftTransactions,
+        unopenedGiftCount: s.unopenedGiftCount,
+        missions: s.missions,
+        streak: s.streak,
+        currency: s.currency,
+        currencyTransactions: s.currencyTransactions,
+        notifications: s.notifications,
+        settings: s.settings,
+        activityCooldowns: s.activityCooldowns,
+        friendDailyLimits: s.friendDailyLimits,
+        lastActiveAt: s.lastActiveAt,
+        welcomeBackShown: s.welcomeBackShown,
+        activityLog: s.activityLog,
+        stats: s.stats,
+        lastWateredAt: s.lastWateredAt,
+        villagePosition: s.villagePosition,
+        discoveredWorldObjects: s.discoveredWorldObjects,
+        discoveredSecrets: s.discoveredSecrets,
+        villageMessages: s.villageMessages,
+        houseProgress: s.houseProgress,
+        treasureCollection: s.treasureCollection,
+        shopInventory: s.shopInventory,
+        equippedCosmetics: s.equippedCosmetics,
+        equippedVehicle: s.equippedVehicle,
+        furniturePlacements: s.furniturePlacements,
+        shopPurchaseHistory: s.shopPurchaseHistory,
+        shopState: s.shopState,
+      };
+      // Debounce: wait 2s after last change before writing.
+      // localStorage is always written immediately via KawnApiGameStateRepository;
+      // the debounce only delays the network push to avoid hammering the API.
+      if (_debounceTimer !== null) clearTimeout(_debounceTimer);
+      _debounceTimer = setTimeout(() => {
+        _repo.save(state);
+        _debounceTimer = null;
+      }, 2_000);
+    };
+  })(),
 
   resetPrototype: () => {
     repo.clear();
