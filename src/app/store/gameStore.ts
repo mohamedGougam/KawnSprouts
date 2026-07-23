@@ -13,10 +13,7 @@ import type {
 } from '../../models';
 import { isWalkablePosition, normalizeWorldPosition, HOME_POSITION, PLAYER_SPROUT_ID } from '../../config/villageConfig';
 import { createDefaultState, INITIAL_GIFTS } from '../../data/initialData';
-import {
-  LocalStorageGameStateRepository,
-  loadStateWithFallback,
-} from '../../repositories/GameStateRepository';
+import { LocalStorageGameStateRepository } from '../../repositories/GameStateRepository';
 import {
   ACTIVITY_COOLDOWNS,
   DUPLICATE_BUTTERFLY_REWARD,
@@ -415,7 +412,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   })(),
 
   resetPrototype: () => {
-    repo.clear();
+    _repo.clear();
     const fresh = createDefaultState();
     set({
       ...fresh,
