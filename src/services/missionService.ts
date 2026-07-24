@@ -20,9 +20,9 @@ export function generateDailyMissions(date: string): DailyMission[] {
   });
 }
 
-export function ensureDailyMissions(missions: MissionProgress): MissionProgress {
+export function ensureDailyMissions(missions?: MissionProgress | null): MissionProgress {
   const today = getTodayDateString();
-  if (missions.date === today && missions.missions.length > 0) {
+  if (missions && missions.date === today && Array.isArray(missions.missions) && missions.missions.length > 0) {
     return missions;
   }
   return { date: today, missions: generateDailyMissions(today) };

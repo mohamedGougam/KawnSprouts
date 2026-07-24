@@ -175,7 +175,7 @@ interface GameStore extends PersistedGameState {
 
 function ensureFriendLimits(state: PersistedGameState): PersistedGameState['friendDailyLimits'] {
   const today = getTodayDateString();
-  if (state.friendDailyLimits.date === today) return state.friendDailyLimits;
+  if (state.friendDailyLimits && state.friendDailyLimits.date === today) return state.friendDailyLimits;
   return { date: today, heartsSent: {}, giftsSent: {}, flowersWatered: {}, wavesSent: {} };
 }
 
