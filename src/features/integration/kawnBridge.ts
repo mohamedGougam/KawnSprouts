@@ -59,12 +59,18 @@ export function getKawnLaunchParams(): KawnLaunchParams {
   if (_cachedParams) return _cachedParams;
   const p = new URLSearchParams(window.location.search);
   const ageStr = p.get('age');
+  let rawApiBase = p.get('apiBase');
+
+  if (rawApiBase && rawApiBase.startsWith('http:') && window.location.protocol === 'https:') {
+    rawApiBase = '/backend-api';
+  }
+
   _cachedParams = {
     kawnUserId: p.get('kawnUserId'),
     displayName: p.get('displayName'),
     age: ageStr ? parseInt(ageStr, 10) : null,
     kawnToken: p.get('kawnToken'),
-    apiBase: p.get('apiBase') ?? null,
+    apiBase: rawApiBase ?? null,
   };
   return _cachedParams;
 }
