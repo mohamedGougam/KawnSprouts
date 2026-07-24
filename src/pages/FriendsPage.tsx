@@ -47,7 +47,7 @@ export function FriendsPage() {
                 }}
                 className="focus-ring flex w-full items-center gap-3 rounded-2xl bg-white p-4 shadow-sm"
               >
-                <span className="text-2xl">{AVATAR_EMOJI[f.avatar]}</span>
+                <span className="text-2xl">{AVATAR_EMOJI[f.avatar] ?? '😊'}</span>
                 <div className="text-left">
                   <p className="font-semibold">{f.name}</p>
                   <p className="text-xs text-gray-500">Level {f.level} · {f.sproutName}&apos;s garden</p>
