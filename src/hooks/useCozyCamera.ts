@@ -33,12 +33,12 @@ export function useCozyCamera(
   const tapBlockedRef = useRef(false);
 
   const cameraRef = useRef<CameraState>({
-    x: playerPos.x,
-    y: playerPos.y,
+    x: playerPos?.x ?? 1800,
+    y: playerPos?.y ?? 2400,
     zoom: COZY_CAMERA_ZOOM,
   });
   const velocityRef = useRef({ x: 0, y: 0 });
-  const prevPlayerRef = useRef(playerPos);
+  const prevPlayerRef = useRef(playerPos ?? { x: 1800, y: 2400 });
   const rafRef = useRef<number>(0);
   const [camera, setCamera] = useState<CameraState>(cameraRef.current);
 
@@ -72,21 +72,22 @@ export function useCozyCamera(
 
     const vw = viewport.clientWidth;
     const vh = viewport.clientHeight;
-    const currentZoom = zoomRef.current;
+    const safePos = playerPos ?? { x: 1800, y: 2400 };
+    const prevPos = prevPlayerRef.current ?? safePos;
 
-    const dx = playerPos.x - prevPlayerRef.current.x;
-    const dy = playerPos.y - prevPlayerRef.current.y;
+    const dx = safePos.x - prevPos.x;
+    const dy = safePos.y - prevPos.y;
     velocityRef.current = { x: dx, y: dy };
-    prevPlayerRef.current = playerPos;
+    prevPlayerRef.current = safePos;
 
     const lag = isMoving ? CAMERA_FOLLOW_LAG : CAMERA_SETTLE_LAG;
     const targetX =
-      playerPos.x -
+      safePos.x -
       vw / (2 * currentZoom) +
       panOffsetRef.current.x +
       (isMoving ? velocityRef.current.x * CAMERA_ANTICIPATION * 0.02 : 0);
     const targetY =
-      playerPos.y -
+      safePos.y -
       vh / (2 * currentZoom) +
       CAMERA_VERTICAL_OFFSET / currentZoom +
       panOffsetRef.current.y +

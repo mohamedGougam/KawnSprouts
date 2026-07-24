@@ -91,11 +91,15 @@ export const FRIEND_WAYPOINTS: Record<string, WorldPosition[]> = {
 
 export const PLAYER_SPROUT_ID = 'player-sprout';
 
-export function isWalkablePosition(pos: WorldPosition): boolean {
+export function isWalkablePosition(pos?: WorldPosition | null): boolean {
+  if (!pos || typeof pos.x !== 'number' || typeof pos.y !== 'number') return false;
   return pos.x >= 60 && pos.x <= WORLD_SIZE - 60 && pos.y >= 60 && pos.y <= WORLD_SIZE - 60;
 }
 
-export function normalizeWorldPosition(pos: WorldPosition): WorldPosition {
+export function normalizeWorldPosition(pos?: WorldPosition | null): WorldPosition {
+  if (!pos || typeof pos.x !== 'number' || typeof pos.y !== 'number') {
+    return HOME_POSITION;
+  }
   if (pos.x <= 100 && pos.y <= 100) {
     return {
       x: Math.round((pos.x / 100) * WORLD_SIZE),
