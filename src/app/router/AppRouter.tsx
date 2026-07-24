@@ -64,6 +64,34 @@ function AppRoutes() {
             identity?.age ?? age ?? undefined,
             identity?.friends,
           );
+
+          if (!identity && kawnToken && apiBase) {
+            // Background retry for identity if network call timed out during boot
+            fetchKawnIdentity(apiBase, kawnToken).then((retryIdentity) => {
+              if (retryIdentity?.friends && retryIdentity.friends.length > 0) {
+                const VALID_COLORS = ['mint', 'peach', 'lavender', 'sky', 'sunny'];
+                const VALID_AVATARS = ['pastel-smile', 'pastel-star', 'pastel-flower', 'pastel-heart', 'pastel-cloud'];
+                useGameStore.setState({
+                  friends: retryIdentity.friends.map((f) => ({
+                    id: f.id,
+                    name: f.name,
+                    age: undefined,
+                    kawnAge: undefined,
+                    level: f.level ?? 1,
+                    avatar: (f.avatar && VALID_AVATARS.includes(f.avatar) ? f.avatar : 'pastel-smile') as any,
+                    sproutName: f.sproutName ?? f.name,
+                    sproutColor: (f.sproutColor && VALID_COLORS.includes(f.sproutColor) ? f.sproutColor : 'mint') as any,
+                    gardenTheme: 'day',
+                    recentActivity: '',
+                    friendshipStatus: 'approved' as const,
+                    privacy: { showAgeToFriends: false, allowVisits: true, allowGifts: true },
+                    lastInteraction: new Date().toISOString(),
+                  })),
+                });
+                useGameStore.getState().persist();
+              }
+            });
+          }
         } catch (err) {
           console.error('[Sprouts] API boot failed — falling back to localStorage:', err);
           hydrate(); // Always safe to fall back

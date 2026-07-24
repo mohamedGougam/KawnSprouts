@@ -92,7 +92,7 @@ export async function fetchKawnIdentity(
   try {
     const res = await fetch(`${apiBase}/sprouts/identity/`, {
       headers: { Authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(3_500),
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) return null;
     return (await res.json()) as KawnUserPayload;
