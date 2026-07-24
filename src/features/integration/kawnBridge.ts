@@ -59,7 +59,10 @@ export function getKawnLaunchParams(): KawnLaunchParams {
   if (_cachedParams) return _cachedParams;
   const p = new URLSearchParams(window.location.search);
   const ageStr = p.get('age');
-  const rawApiBase = p.get('apiBase');
+  let rawApiBase = p.get('apiBase');
+  if (rawApiBase) {
+    rawApiBase = rawApiBase.replace(/\/$/, '');
+  }
 
   _cachedParams = {
     kawnUserId: p.get('kawnUserId'),
@@ -89,8 +92,9 @@ export async function fetchKawnIdentity(
   apiBase: string,
   token: string,
 ): Promise<KawnUserPayload | null> {
+  const cleanBase = apiBase.replace(/\/$/, '');
   try {
-    const res = await fetch(`${apiBase}/sprouts/identity/`, {
+    const res = await fetch(`${cleanBase}/sprouts/identity/`, {
       headers: { Authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(10_000),
     });
@@ -154,8 +158,9 @@ export async function pollPendingActivityEvents(
   apiBase: string,
   token: string,
 ): Promise<KawnActivityEventType[]> {
+  const cleanBase = apiBase.replace(/\/$/, '');
   try {
-    const res = await fetch(`${apiBase}/sprouts/activity/pending/`, {
+    const res = await fetch(`${cleanBase}/sprouts/activity/pending/`, {
       headers: { Authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(5_000),
     });
