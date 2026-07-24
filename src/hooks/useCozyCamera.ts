@@ -72,6 +72,7 @@ export function useCozyCamera(
 
     const vw = viewport.clientWidth;
     const vh = viewport.clientHeight;
+    const currentZoom = zoomRef.current;
     const safePos = playerPos ?? { x: 1800, y: 2400 };
     const prevPos = prevPlayerRef.current ?? safePos;
 
