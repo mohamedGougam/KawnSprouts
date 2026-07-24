@@ -78,7 +78,7 @@ export function VillageSproutMarker({
   motionScale = 1,
   onTapSound,
 }: VillageSproutMarkerProps) {
-  const colors = SPROUT_COLOR_MAP[color];
+  const colors = SPROUT_COLOR_MAP[color] ?? SPROUT_COLOR_MAP.mint;
   const isSad = emotion === 'sad' || emotion === 'thirsty';
   const mouthCurve = isSad ? -4 : 5;
 

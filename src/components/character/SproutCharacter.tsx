@@ -34,7 +34,7 @@ export function SproutCharacter({
   className = '',
 }: SproutCharacterProps) {
   const settings = useSettings();
-  const colors = SPROUT_COLOR_MAP[color];
+  const colors = SPROUT_COLOR_MAP[color] ?? SPROUT_COLOR_MAP.mint;
   const baseSize = SIZE_MAP[size];
   const scale = STAGE_SCALE[growthStage];
   const reduced = settings.reducedMotion;

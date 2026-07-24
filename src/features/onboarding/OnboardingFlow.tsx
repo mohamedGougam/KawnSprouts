@@ -76,7 +76,7 @@ export function OnboardingFlow() {
                   className={`focus-ring flex flex-col items-center gap-2 rounded-2xl p-3 ${sproutColor === c.id ? 'bg-white shadow-md ring-2 ring-mint-400' : 'bg-white/60'}`}
                   aria-pressed={sproutColor === c.id}
                 >
-                  <div className="h-10 w-10 rounded-full" style={{ background: SPROUT_COLOR_MAP[c.id].body }} />
+                  <div className="h-10 w-10 rounded-full" style={{ background: (SPROUT_COLOR_MAP[c.id] ?? SPROUT_COLOR_MAP.mint).body }} />
                   <span className="text-xs">{c.label}</span>
                 </button>
               ))}
