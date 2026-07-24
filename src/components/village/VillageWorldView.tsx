@@ -827,7 +827,7 @@ export function VillageWorldView() {
           <>
             <p className="text-sm text-gray-600">Cared for by {selectedFriend.name}</p>
             {(() => {
-              const displayAge = getKawnDisplayAge(selectedFriend.kawnAge ?? selectedFriend.age, selectedFriend.privacy.showAgeToFriends, true);
+              const displayAge = getKawnDisplayAge(selectedFriend.kawnAge ?? selectedFriend.age, selectedFriend.privacy?.showAgeToFriends ?? true, true);
               return displayAge !== null ? (
                 <p className="mt-1 text-sm font-medium text-gray-800">Age {displayAge}</p>
               ) : (

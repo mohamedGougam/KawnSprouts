@@ -18,7 +18,7 @@ export function PlayerMiniCard({
   className = '',
 }: PlayerMiniCardProps) {
   const ageVisible =
-    showAge && canShowAge(viewerIsApprovedFriend, player.privacy.showAgeToFriends, player.age);
+    showAge && canShowAge(viewerIsApprovedFriend, player.privacy?.showAgeToFriends ?? true, player.age);
   const xpProgress = getExperienceProgress(player.experience);
 
   return (

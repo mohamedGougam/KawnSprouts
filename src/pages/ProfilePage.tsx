@@ -111,12 +111,12 @@ export function ProfilePage() {
 
       <section className="mb-4 rounded-2xl bg-white p-4 shadow-sm">
         <h2 className="mb-3 font-semibold">Privacy</h2>
-        <PrivacyToggle label="Show age to approved friends" checked={player.privacy.showAgeToFriends} onChange={(v) => updatePrivacy({ showAgeToFriends: v })} hint="Only approved friends can see your age when enabled." />
-        <PrivacyToggle label="Allow friend garden visits" checked={player.privacy.allowFriendVisits} onChange={(v) => updatePrivacy({ allowFriendVisits: v })} hint="Friends can visit your garden preview." />
-        <PrivacyToggle label="Allow gifts" checked={player.privacy.allowGifts} onChange={(v) => updatePrivacy({ allowGifts: v })} hint="Receive small gifts from friends." />
-        <PrivacyToggle label="Allow hearts" checked={player.privacy.allowHearts} onChange={(v) => updatePrivacy({ allowHearts: v })} hint="Friends can send you hearts." />
-        <PrivacyToggle label="Show recent activity" checked={player.privacy.showRecentActivity} onChange={(v) => updatePrivacy({ showRecentActivity: v })} hint="Friends see gentle activity updates." />
-        <PrivacyToggle label="Reduce social visibility" checked={player.privacy.reduceSocialVisibility} onChange={(v) => updatePrivacy({ reduceSocialVisibility: v })} hint="Appear quieter in friend lists." />
+        <PrivacyToggle label="Show age to approved friends" checked={player.privacy?.showAgeToFriends ?? true} onChange={(v) => updatePrivacy({ showAgeToFriends: v })} hint="Only approved friends can see your age when enabled." />
+        <PrivacyToggle label="Allow friend garden visits" checked={player.privacy?.allowFriendVisits ?? true} onChange={(v) => updatePrivacy({ allowFriendVisits: v })} hint="Friends can visit your garden preview." />
+        <PrivacyToggle label="Allow gifts" checked={player.privacy?.allowGifts ?? true} onChange={(v) => updatePrivacy({ allowGifts: v })} hint="Receive small gifts from friends." />
+        <PrivacyToggle label="Allow hearts" checked={player.privacy?.allowHearts ?? true} onChange={(v) => updatePrivacy({ allowHearts: v })} hint="Friends can send you hearts." />
+        <PrivacyToggle label="Show recent activity" checked={player.privacy?.showRecentActivity ?? true} onChange={(v) => updatePrivacy({ showRecentActivity: v })} hint="Friends see gentle activity updates." />
+        <PrivacyToggle label="Reduce social visibility" checked={player.privacy?.reduceSocialVisibility ?? false} onChange={(v) => updatePrivacy({ reduceSocialVisibility: v })} hint="Appear quieter in friend lists." />
       </section>
 
       <section className="mb-4 rounded-2xl bg-white p-4 shadow-sm">

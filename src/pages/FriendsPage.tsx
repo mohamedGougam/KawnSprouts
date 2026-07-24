@@ -61,7 +61,7 @@ export function FriendsPage() {
   }
 
   const theme = FRIEND_THEMES[friend.id] ?? FRIEND_THEMES.adam;
-  const ageVisible = canShowAge(true, friend.privacy.showAgeToFriends, friend.age);
+  const ageVisible = canShowAge(true, friend.privacy?.showAgeToFriends ?? true, friend.age);
 
   const handleAction = (action: () => { success: boolean; message?: string }) => {
     const result = action();
@@ -82,7 +82,7 @@ export function FriendsPage() {
           age: friend.age ?? 0,
           level: friend.level,
           avatar: friend.avatar,
-          privacy: { ...player.privacy, showAgeToFriends: friend.privacy.showAgeToFriends },
+          privacy: { ...player.privacy, showAgeToFriends: friend.privacy?.showAgeToFriends ?? true },
         }}
         showAge={ageVisible}
         className="mb-4"
