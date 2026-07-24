@@ -355,6 +355,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       villageThreadOpen: false,
     });
     get().checkWelcomeBack();
+    get().persist();
   },
 
   persist: (() => {
